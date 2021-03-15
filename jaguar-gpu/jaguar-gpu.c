@@ -1,6 +1,6 @@
 /*
  * Disassembler for the Jaguar GPU/DSP
- * Copyright (C) 2018 - Sebastien Alaiwan
+ * SPDX-FileCopyrightText: 2018 Sebastien Alaiwan
  */
 
 #include <rz_asm.h>
