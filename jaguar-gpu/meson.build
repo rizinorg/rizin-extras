@@ -1,6 +1,6 @@
 project('jaguar-gpu', 'c')
 
-plugins_dir = join_paths(get_option('prefix'), 'lib', 'rizin', '0.2.0-git')
+plugins_dir = join_paths(get_option('prefix'), 'share', 'rizin', 'plugins')
 
 rz_asm_lib = dependency('rz_asm')
 

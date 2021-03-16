@@ -1,7 +1,7 @@
-/*
- * Disassembler for the Jaguar GPU/DSP
- * SPDX-FileCopyrightText: 2018 Sebastien Alaiwan
- */
+// SPDX-FileCopyrightText: 2018 Sebastien Alaiwan
+// SPDX-License-Identifier: LGPL-3.0-only
+
+//  Disassembler for the Jaguar GPU/DSP
 
 #include <rz_asm.h>
 #include <rz_lib.h>
