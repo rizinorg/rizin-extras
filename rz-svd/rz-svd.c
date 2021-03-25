@@ -19,10 +19,11 @@ typedef struct ta_iter {
 	const char *ptr;
 	const char *end;
 
-	char regname[10];
-	char groupName[10];
-	char bitoffset[4];
+	char regname[50];
+	char groupName[50];
+	char bitoffset[10];
 	char bitwidth[20];
+	char description[50];
 } ta_iter;
 
 static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
@@ -52,17 +53,17 @@ static inline int ta_iter_done(ta_iter *ta) {
 }
 
 static ta_iter *ta_iter_next(ta_iter *ta) {
-	char *tmp;
 	yxml_ret_t r = YXML_OK;
 	yxml_t ta_x;
 
-	int level = 0;
-	char *cur = NULL;
+	int level;
+	char *cur, *tmp;
 	char value[2048];
 	const char *ta_start;
 	enum { REGNAME,
 		BITWIDTH,
-		BITOFFSET } elem_type;
+		BITOFFSET,
+		DESCRIPTION } elem_type;
 
 	cur = value;
 	value[0] = 0;
@@ -169,6 +170,8 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				elem_type = BITWIDTH;
 			} else if (strcasecmp(ta->x.elem, "bitOffset") == 0) {
 				elem_type = BITOFFSET;
+			} else if (strcasecmp(ta->x.elem, "description") == 0) {
+				elem_type = DESCRIPTION;
 			} else {
 				break;
 			}
@@ -184,7 +187,6 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 			} else if (level != 6 || !cur) {
 				break;
 			}
-		
 			cur = NULL;
 			switch (elem_type) {
 			case BITOFFSET:
@@ -195,6 +197,9 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				break;
 			case REGNAME:
 				strcpytrunc(ta->regname, value, sizeof(ta->regname));
+				break;
+			case DESCRIPTION:
+				strcpytrunc(ta->description, value, sizeof(ta->description));
 				break;
 			}
 			break;
@@ -215,7 +220,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		default:
 			break;
 		}
-		if (level == 0) {
+		if (level == 1) {
 			break;
 		}
 		ta->ptr++;
@@ -224,7 +229,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		}
 		r = yxml_parse(&ta->x, *ta->ptr);
 	}
-	return ta->bitoffset && *ta->regname && *ta->groupName && *ta->bitwidth ? ta : ta_iter_next(ta);
+	return ta->bitoffset && *ta->regname && *ta->groupName && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);
 }
 
 static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
@@ -240,9 +245,9 @@ static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 
 static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
-
 	for (ta = ta_iter_init(&ta_spc, file); ta; ta = ta_iter_next(ta)) {
 		rz_core_cmdf(core, "f %s.%s %s @ %s", ta->groupName, ta->regname, ta->bitwidth, ta->bitoffset);
+		rz_core_cmdf(core, "CC %s @ %s", ta->description, ta->bitoffset);
 	}
 	return 1;
 }
