@@ -12,6 +12,8 @@ static int read16_BE(const ut8 **b) {
 	return val;
 }
 
+#define asmprintf(fmt, ...) rz_strbuf_setf(&op->buf_asm, fmt, ##__VA_ARGS__)
+
 static const char *condition(int code) {
 	switch (code) {
 	case 0:
@@ -68,204 +70,204 @@ static int disassemble(RzAsm *a, RzAsmOp *op, const ut8 *buf, int len) {
 	pc += 2;
 	switch (opCode) {
 	case 0:
-		rz_strbuf_setf(&op->buf_asm, "add     r%d, r%d", reg1, reg2);
+		asmprintf("add     r%d, r%d", reg1, reg2);
 		break;
 	case 1:
-		rz_strbuf_setf(&op->buf_asm, "addc    r%d, r%d", reg1, reg2);
+		asmprintf("addc    r%d, r%d", reg1, reg2);
 		break;
 	case 2:
-		rz_strbuf_setf(&op->buf_asm, "addq    0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("addq    0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 3:
-		rz_strbuf_setf(&op->buf_asm, "addqt   0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("addqt   0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 4:
-		rz_strbuf_setf(&op->buf_asm, "sub     r%d, r%d", reg1, reg2);
+		asmprintf("sub     r%d, r%d", reg1, reg2);
 		break;
 	case 5:
-		rz_strbuf_setf(&op->buf_asm, "subc    r%d, r%d", reg1, reg2);
+		asmprintf("subc    r%d, r%d", reg1, reg2);
 		break;
 	case 6:
-		rz_strbuf_setf(&op->buf_asm, "subq    0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("subq    0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 7:
-		rz_strbuf_setf(&op->buf_asm, "subqt   0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("subqt   0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 8:
-		rz_strbuf_setf(&op->buf_asm, "neg     r%d", reg2);
+		asmprintf("neg     r%d", reg2);
 		break;
 	case 9:
-		rz_strbuf_setf(&op->buf_asm, "and     r%d, r%d", reg1, reg2);
+		asmprintf("and     r%d, r%d", reg1, reg2);
 		break;
 	case 10:
-		rz_strbuf_setf(&op->buf_asm, "or      r%d, r%d", reg1, reg2);
+		asmprintf("or      r%d, r%d", reg1, reg2);
 		break;
 	case 11:
-		rz_strbuf_setf(&op->buf_asm, "xor     r%d, r%d", reg1, reg2);
+		asmprintf("xor     r%d, r%d", reg1, reg2);
 		break;
 	case 12:
-		rz_strbuf_setf(&op->buf_asm, "not     r%d", reg2);
+		asmprintf("not     r%d", reg2);
 		break;
 	case 13:
-		rz_strbuf_setf(&op->buf_asm, "btst    0x%x, r%d", reg1, reg2);
+		asmprintf("btst    0x%x, r%d", reg1, reg2);
 		break;
 	case 14:
-		rz_strbuf_setf(&op->buf_asm, "bset    0x%x, r%d", reg1, reg2);
+		asmprintf("bset    0x%x, r%d", reg1, reg2);
 		break;
 	case 15:
-		rz_strbuf_setf(&op->buf_asm, "bclr    0x%x, r%d", reg1, reg2);
+		asmprintf("bclr    0x%x, r%d", reg1, reg2);
 		break;
 	case 16:
-		rz_strbuf_setf(&op->buf_asm, "mult    r%d, r%d", reg1, reg2);
+		asmprintf("mult    r%d, r%d", reg1, reg2);
 		break;
 	case 17:
-		rz_strbuf_setf(&op->buf_asm, "imult   r%d, r%d", reg1, reg2);
+		asmprintf("imult   r%d, r%d", reg1, reg2);
 		break;
 	case 18:
-		rz_strbuf_setf(&op->buf_asm, "imultn  r%d, r%d", reg1, reg2);
+		asmprintf("imultn  r%d, r%d", reg1, reg2);
 		break;
 	case 19:
-		rz_strbuf_setf(&op->buf_asm, "resmac  r%d", reg2);
+		asmprintf("resmac  r%d", reg2);
 		break;
 	case 20:
-		rz_strbuf_setf(&op->buf_asm, "imacn   r%d, r%d", reg1, reg2);
+		asmprintf("imacn   r%d, r%d", reg1, reg2);
 		break;
 	case 21:
-		rz_strbuf_setf(&op->buf_asm, "div     r%d, r%d", reg1, reg2);
+		asmprintf("div     r%d, r%d", reg1, reg2);
 		break;
 	case 22:
-		rz_strbuf_setf(&op->buf_asm, "abs     r%d", reg2);
+		asmprintf("abs     r%d", reg2);
 		break;
 	case 23:
-		rz_strbuf_setf(&op->buf_asm, "sh      r%d, r%d", reg1, reg2);
+		asmprintf("sh      r%d, r%d", reg1, reg2);
 		break;
 	case 24:
-		rz_strbuf_setf(&op->buf_asm, "shlq    0x%x, r%d", 32 - notZero(reg1), reg2);
+		asmprintf("shlq    0x%x, r%d", 32 - notZero(reg1), reg2);
 		break;
 	case 25:
-		rz_strbuf_setf(&op->buf_asm, "shrq    0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("shrq    0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 26:
-		rz_strbuf_setf(&op->buf_asm, "sha     r%d, r%d", reg1, reg2);
+		asmprintf("sha     r%d, r%d", reg1, reg2);
 		break;
 	case 27:
-		rz_strbuf_setf(&op->buf_asm, "sharq   0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("sharq   0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 28:
-		rz_strbuf_setf(&op->buf_asm, "ror     r%d, r%d", reg1, reg2);
+		asmprintf("ror     r%d, r%d", reg1, reg2);
 		break;
 	case 29:
-		rz_strbuf_setf(&op->buf_asm, "rorq    0x%x, r%d", notZero(reg1), reg2);
+		asmprintf("rorq    0x%x, r%d", notZero(reg1), reg2);
 		break;
 	case 30:
-		rz_strbuf_setf(&op->buf_asm, "cmp     r%d, r%d", reg1, reg2);
+		asmprintf("cmp     r%d, r%d", reg1, reg2);
 		break;
 	case 31:
-		rz_strbuf_setf(&op->buf_asm, "cmpq    0x%x, r%d", reg1, reg2);
+		asmprintf("cmpq    0x%x, r%d", reg1, reg2);
 		break;
 	case 32:
-		rz_strbuf_setf(&op->buf_asm, "sat8    r%d", reg2);
+		asmprintf("sat8    r%d", reg2);
 		break;
 	case 33:
-		rz_strbuf_setf(&op->buf_asm, "sat16   r%d", reg2);
+		asmprintf("sat16   r%d", reg2);
 		break;
 	case 34:
-		rz_strbuf_setf(&op->buf_asm, "move    r%d, r%d", reg1, reg2);
+		asmprintf("move    r%d, r%d", reg1, reg2);
 		break;
 	case 35:
-		rz_strbuf_setf(&op->buf_asm, "moveq   0x%x, r%d", reg1, reg2);
+		asmprintf("moveq   0x%x, r%d", reg1, reg2);
 		break;
 	case 36:
-		rz_strbuf_setf(&op->buf_asm, "moveta  r%d, r%d", reg1, reg2);
+		asmprintf("moveta  r%d, r%d", reg1, reg2);
 		break;
 	case 37:
-		rz_strbuf_setf(&op->buf_asm, "movefa  r%d, r%d", reg1, reg2);
+		asmprintf("movefa  r%d, r%d", reg1, reg2);
 		break;
 	case 38: {
 		uint low = read16_BE(&p);
 		uint high = read16_BE(&p);
-		rz_strbuf_setf(&op->buf_asm, "movei   0x%x, r%d", low | (high << 16), reg2);
+		asmprintf("movei   0x%x, r%d", low | (high << 16), reg2);
 		break;
 	}
 	case 39:
-		rz_strbuf_setf(&op->buf_asm, "loadb   [r%d], r%d", reg1, reg2);
+		asmprintf("loadb   [r%d], r%d", reg1, reg2);
 		break;
 	case 40:
-		rz_strbuf_setf(&op->buf_asm, "loadw   [r%d], r%d", reg1, reg2);
+		asmprintf("loadw   [r%d], r%d", reg1, reg2);
 		break;
 	case 41:
-		rz_strbuf_setf(&op->buf_asm, "load    [r%d], r%d", reg1, reg2);
+		asmprintf("load    [r%d], r%d", reg1, reg2);
 		break;
 	case 42:
-		rz_strbuf_setf(&op->buf_asm, "loadp   [r%d], r%d", reg1, reg2);
+		asmprintf("loadp   [r%d], r%d", reg1, reg2);
 		break;
 	case 43:
-		rz_strbuf_setf(&op->buf_asm, "load    [r14+0x%x], r%d", notZero(reg1) * 4, reg2);
+		asmprintf("load    [r14+0x%x], r%d", notZero(reg1) * 4, reg2);
 		break;
 	case 44:
-		rz_strbuf_setf(&op->buf_asm, "load    [r15+0x%x], r%d", notZero(reg1) * 4, reg2);
+		asmprintf("load    [r15+0x%x], r%d", notZero(reg1) * 4, reg2);
 		break;
 	case 45:
-		rz_strbuf_setf(&op->buf_asm, "storeb  r%d, [r%d]", reg2, reg1);
+		asmprintf("storeb  r%d, [r%d]", reg2, reg1);
 		break;
 	case 46:
-		rz_strbuf_setf(&op->buf_asm, "storew  r%d, [r%d]", reg2, reg1);
+		asmprintf("storew  r%d, [r%d]", reg2, reg1);
 		break;
 	case 47:
-		rz_strbuf_setf(&op->buf_asm, "store   r%d, [r%d]", reg2, reg1);
+		asmprintf("store   r%d, [r%d]", reg2, reg1);
 		break;
 	case 48:
-		rz_strbuf_setf(&op->buf_asm, "storep  r%d, [r%d]", reg2, reg1);
+		asmprintf("storep  r%d, [r%d]", reg2, reg1);
 		break;
 	case 49:
-		rz_strbuf_setf(&op->buf_asm, "store   r%d, [r14+0x%x]", reg2, notZero(reg1) * 4);
+		asmprintf("store   r%d, [r14+0x%x]", reg2, notZero(reg1) * 4);
 		break;
 	case 50:
-		rz_strbuf_setf(&op->buf_asm, "store   r%d, [r15+0x%x]", reg2, notZero(reg1) * 4);
+		asmprintf("store   r%d, [r15+0x%x]", reg2, notZero(reg1) * 4);
 		break;
 	case 51:
-		rz_strbuf_setf(&op->buf_asm, "move    pc, r%d", reg2);
+		asmprintf("move    pc, r%d", reg2);
 		break;
 	case 52:
-		rz_strbuf_setf(&op->buf_asm, "j%s     [r%d]", condition(reg2), reg1);
+		asmprintf("j%s     [r%d]", condition(reg2), reg1);
 		break;
 	case 53:
-		rz_strbuf_setf(&op->buf_asm, "j%s     0x%.8X", condition(reg2), pc + ((int8_t)(reg1 << 3) >> 2));
+		asmprintf("j%s     0x%.8X", condition(reg2), pc + ((int8_t)(reg1 << 3) >> 2));
 		break;
 	case 54:
-		rz_strbuf_setf(&op->buf_asm, "mmult   r%d, r%d", reg1, reg2);
+		asmprintf("mmult   r%d, r%d", reg1, reg2);
 		break;
 	case 55:
-		rz_strbuf_setf(&op->buf_asm, "mtoi    r%d, r%d", reg1, reg2);
+		asmprintf("mtoi    r%d, r%d", reg1, reg2);
 		break;
 	case 56:
-		rz_strbuf_setf(&op->buf_asm, "normi   r%d, r%d", reg1, reg2);
+		asmprintf("normi   r%d, r%d", reg1, reg2);
 		break;
 	case 57:
-		rz_strbuf_setf(&op->buf_asm, "nop");
+		asmprintf("nop");
 		break;
 	case 58:
-		rz_strbuf_setf(&op->buf_asm, "load    [r14+r%d], r%d", reg1, reg2);
+		asmprintf("load    [r14+r%d], r%d", reg1, reg2);
 		break;
 	case 59:
-		rz_strbuf_setf(&op->buf_asm, "load    [r15+r%d], r%d", reg1, reg2);
+		asmprintf("load    [r15+r%d], r%d", reg1, reg2);
 		break;
 	case 60:
-		rz_strbuf_setf(&op->buf_asm, "store   r%d, [r14+r%d]", reg2, reg1);
+		asmprintf("store   r%d, [r14+r%d]", reg2, reg1);
 		break;
 	case 61:
-		rz_strbuf_setf(&op->buf_asm, "store   r%d, [r15+r%d]", reg2, reg1);
+		asmprintf("store   r%d, [r15+r%d]", reg2, reg1);
 		break;
 	case 62:
-		rz_strbuf_setf(&op->buf_asm, "sat24   r%d", reg2);
+		asmprintf("sat24   r%d", reg2);
 		break;
 	case 63: {
 		if (reg1 == 0)
-			rz_strbuf_setf(&op->buf_asm, "pack    r%d", reg2);
+			asmprintf("pack    r%d", reg2);
 		else if (reg1 == 1)
-			rz_strbuf_setf(&op->buf_asm, "unpack    r%d", reg2);
+			asmprintf("unpack    r%d", reg2);
 		else
-			rz_strbuf_setf(&op->buf_asm, "invalid");
+			asmprintf("invalid");
 		break;
 	}
 	}
