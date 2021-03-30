@@ -10,9 +10,10 @@
 #include <yxml.h>
 
 #define XMLBUFSIZE 4096
+#define VALUESIZE  2048
 
 typedef struct ta_iter {
-	uint8_t yxml_buf[4096];
+	uint8_t yxml_buf[XMLBUFSIZE];
 	yxml_t x;
 
 	const char *start;
@@ -25,6 +26,11 @@ typedef struct ta_iter {
 	char bitwidth[20];
 	char description[50];
 } ta_iter;
+
+enum { REGNAME,
+	BITWIDTH,
+	BITOFFSET,
+	DESCRIPTION } elem_type;
 
 static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
 	size_t to_copy = strlen(src);
@@ -58,12 +64,8 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 	int level;
 	char *cur, *tmp;
-	char value[2048];
+	char value[VALUESIZE];
 	const char *ta_start;
-	enum { REGNAME,
-		BITWIDTH,
-		BITOFFSET,
-		DESCRIPTION } elem_type;
 
 	cur = value;
 	value[0] = 0;
@@ -124,7 +126,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		if (ta_iter_done(ta))
 			return NULL;
 	}
-	assert(ta->groupName[0]);
+	rz_return_if_fail(ta->groupName[0]);
 
 	level = 0;
 	while (!ta_iter_done(ta)) {
@@ -209,6 +211,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				break;
 			}
 			tmp = ta->x.data;
+			rz_str_replace_char(tmp, '\n', ' ');
 			while (*tmp && cur < value + sizeof(value))
 				*cur++ = *tmp++;
 			if (cur >= value + sizeof(value))
@@ -234,8 +237,15 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 	char *doc = rz_file_slurp(file, NULL);
+	if (!doc) {
+		eprintf("Failed to open file \"%s\"\n", file);
+		return NULL;
+	}
 	int doc_len = rz_file_size(file);
-
+	if (!doc_len) {
+		eprintf("Failed to read the file size \"%s\"\n", file);
+		return NULL;
+	}
 	ta->ptr = ta->start = doc;
 	ta->end = ta->start + doc_len;
 	yxml_init(&ta->x, ta->yxml_buf, sizeof(ta->yxml_buf));
