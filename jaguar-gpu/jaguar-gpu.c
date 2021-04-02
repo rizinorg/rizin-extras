@@ -6,12 +6,6 @@
 #include <rz_asm.h>
 #include <rz_lib.h>
 
-static int read16_BE(const ut8 **b) {
-	int val = ((*b)[0] << 8) | ((*b)[1] << 0);
-	(*b) += 2;
-	return val;
-}
-
 #define asmprintf(fmt, ...) rz_strbuf_setf(&op->buf_asm, fmt, ##__VA_ARGS__)
 
 static const char *condition(int code) {
@@ -60,7 +54,8 @@ static int notZero(int val) {
 static int disassemble(RzAsm *a, RzAsmOp *op, const ut8 *buf, int len) {
 	const ut8 *p = buf; /* read pointer */
 
-	const uint word = read16_BE(&p);
+	const uint word = rz_read_be16(p);
+	p += 2;
 	const uint opCode = (word >> 10) & 63;
 	const uint reg1 = (word >> 5) & 31;
 	const uint reg2 = (word >> 0) & 31;
@@ -184,8 +179,8 @@ static int disassemble(RzAsm *a, RzAsmOp *op, const ut8 *buf, int len) {
 		asmprintf("movefa  r%d, r%d", reg1, reg2);
 		break;
 	case 38: {
-		uint low = read16_BE(&p);
-		uint high = read16_BE(&p);
+		uint low = rz_read_be16(p);
+		uint high = rz_read_be16(p);
 		asmprintf("movei   0x%x, r%d", low | (high << 16), reg2);
 		break;
 	}
