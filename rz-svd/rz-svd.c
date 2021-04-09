@@ -42,8 +42,8 @@ static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
 
 static const RzCmdDescArg cmd_svd_args[] = {
 	{
-		.name = "svd file",
-		.type = RZ_CMD_ARG_TYPE_STRING,
+		.name = "Path to svd file",
+		.type = RZ_CMD_ARG_TYPE_FILE,
 
 	},
 	{ 0 },
@@ -126,7 +126,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		if (ta_iter_done(ta))
 			return NULL;
 	}
-	rz_return_if_fail(ta->groupName[0]);
+	assert(ta->groupName[0]);
 
 	level = 0;
 	while (!ta_iter_done(ta)) {
@@ -255,9 +255,11 @@ static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 
 static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
+	char *name;
 	for (ta = ta_iter_init(&ta_spc, file); ta; ta = ta_iter_next(ta)) {
-		rz_core_cmdf(core, "f %s.%s %s @ %s", ta->groupName, ta->regname, ta->bitwidth, ta->bitoffset);
-		rz_core_cmdf(core, "CC %s @ %s", ta->description, ta->bitoffset);
+		name = rz_str_newf("%s.%s", ta->groupName, ta->regname);
+		rz_flag_set(core->flags, name, rz_num_math(NULL,ta->bitoffset), rz_num_math(NULL,ta->bitwidth));
+		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, rz_num_math(NULL,ta->bitoffset), ta->description);
 	}
 	return 1;
 }
