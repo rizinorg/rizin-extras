@@ -1,9 +1,9 @@
 NAME=zpu
-R2_PLUGIN_PATH=$(shell r2 -hh|grep R2_LIBR_PLUGINS|awk '{print $$2}')
-CFLAGS=-g -fPIC $(shell pkg-config --cflags r_asm)
-LDFLAGS=-shared $(shell pkg-config --libs r_asm)
+RZ_PLUGIN_PATH=$(shell rizin -hh | grep RZ_LIBR_PLUGINS | awk '{print $$2}')
+CFLAGS=-g -fPIC $(shell pkg-config --cflags rz_asm)
+LDFLAGS=-shared $(shell pkg-config --libs rz_asm)
 OBJS=$(NAME).o
-SO_EXT=$(shell uname|grep -q Darwin && echo dylib || echo so)
+SO_EXT=$(shell uname | grep -q Darwin && echo dylib || echo so)
 LIB=$(NAME).$(SO_EXT)
 
 all: $(LIB)
@@ -15,7 +15,7 @@ $(LIB): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(LIB)
 
 install:
-	cp -f $(NAME).$(SO_EXT) $(R2_PLUGIN_PATH)
+	cp -f $(LIB) $(RZ_PLUGIN_PATH)
 
 uninstall:
-	rm -f $(R2_PLUGIN_PATH)/$(NAME).$(SO_EXT)
+	rm -f $(RZ_PLUGIN_PATH)/$(LIB)
