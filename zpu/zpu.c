@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: 2016 saucec0de
 // SPDX-License-Identifier: LGPL-3.0-only
 
-// zpu plugin by saucec0de at 2016
-
 #include <rz_asm.h>
 #include <rz_lib.h>
 
