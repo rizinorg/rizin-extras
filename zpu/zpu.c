@@ -1,46 +1,49 @@
-/* zpu plugin by saucec0de at 2016 */
+// SPDX-FileCopyrightText: 2016 saucec0de
+// SPDX-License-Identifier: LGPL-3.0-only
 
-#include <r_asm.h>
-#include <r_lib.h>
+#include <rz_asm.h>
+#include <rz_lib.h>
 
-static int disassemble (RAsm *a, RAsmOp *op, const ut8 *b, int l) {
+#define asmprintf(...) rz_strbuf_setf(&op->buf_asm, ##__VA_ARGS__)
+
+static int disassemble (RzAsm *a, RzAsmOp *op, const ut8 *buf, int len) {
 	char arg[100];
-	ut8 instr = b[0];
+	ut8 instr = buf[0];
 
 	op->size = 1;
 
 	// 000x xxxx
 	if ( (instr & 0xe0) == 0x00 ) {
 		switch ( instr & 0x1f ) {
-			case 0x0: strcpy (op->buf_asm, "BRK");     break;
-			case 0x1: strcpy (op->buf_asm, "unknown"); break;
-			case 0x2: strcpy (op->buf_asm, "PUSHSP");  break;
-			case 0x3: strcpy (op->buf_asm, "unknown"); break;
-			case 0x4: strcpy (op->buf_asm, "POPPC");   break;
-			case 0x5: strcpy (op->buf_asm, "ADD");     break;
-			case 0x6: strcpy (op->buf_asm, "AND");     break;
-			case 0x7: strcpy (op->buf_asm, "OR");      break;
-			case 0x8: strcpy (op->buf_asm, "LOAD");    break;
-			case 0x9: strcpy (op->buf_asm, "NOT");     break;
-			case 0xa: strcpy (op->buf_asm, "FLIP");    break;
-			case 0xb: strcpy (op->buf_asm, "NOP");     break;
-			case 0xc: strcpy (op->buf_asm, "STORE");   break;
-			case 0xd: strcpy (op->buf_asm, "POPSP");   break;
-			case 0xe: strcpy (op->buf_asm, "unknown"); break;
-			case 0xf: strcpy (op->buf_asm, "unknown"); break;
+			case 0x0: asmprintf ("BRK");     break;
+			case 0x1: asmprintf ("unknown"); break;
+			case 0x2: asmprintf ("PUSHSP");  break;
+			case 0x3: asmprintf ("unknown"); break;
+			case 0x4: asmprintf ("POPPC");   break;
+			case 0x5: asmprintf ("ADD");     break;
+			case 0x6: asmprintf ("AND");     break;
+			case 0x7: asmprintf ("OR");      break;
+			case 0x8: asmprintf ("LOAD");    break;
+			case 0x9: asmprintf ("NOT");     break;
+			case 0xa: asmprintf ("FLIP");    break;
+			case 0xb: asmprintf ("NOP");     break;
+			case 0xc: asmprintf ("STORE");   break;
+			case 0xd: asmprintf ("POPSP");   break;
+			case 0xe: asmprintf ("unknown"); break;
+			case 0xf: asmprintf ("unknown"); break;
 			default:
-		strcpy (op->buf_asm, "ADDTOP ");
+		asmprintf ("ADDTOP");
 		sprintf (arg, "%d", instr & 0x0f);
-		strcat (op->buf_asm, arg);
+		asmprintf (arg);
 		break;
 		}
 		return 1;
 	}
 	// 001x xxxx
 	if ( (instr & 0xe0) == 0x20 ) {
-		strcpy (op->buf_asm, "EMULATE ");
+		asmprintf ("EMULATE");
 		sprintf (arg, "%d", instr & 0x1f);
-		strcat (op->buf_asm, arg);
+		asmprintf (arg);
 		return 1;
 	}
 	// 010x xxxx
@@ -48,16 +51,16 @@ static int disassemble (RAsm *a, RAsmOp *op, const ut8 *b, int l) {
 		int val = instr & 0x1f;
 		val ^= 0x10;
 		if (val == 0) {
-			strcpy (op->buf_asm, "POP");
+			asmprintf ("POP");
 			return 1;
 		}
 		if (val == 1) {
-			strcpy (op->buf_asm, "POPDOWN");
+			asmprintf ("POPDOWN");
 			return 1;
 		}
-		strcpy (op->buf_asm, "STORESP ");
+		asmprintf ("STORESP");
 		sprintf (arg, "%d", val);
-		strcat (op->buf_asm, arg);
+		asmprintf (arg);
 		return 1;
 	}
 	// 011x xxxx
@@ -65,25 +68,25 @@ static int disassemble (RAsm *a, RAsmOp *op, const ut8 *b, int l) {
 		int val = instr & 0x1f;
 		val ^= 0x10;
 		if (val == 0) {
-			strcpy (op->buf_asm, "DUP");
+			asmprintf ("DUP");
 			return 1;
 		}
 		if (val == 1) {
-			strcpy (op->buf_asm, "DUPSTACKB");
+			asmprintf ("DUPSTACKB");
 			return 1;
 		}
-		strcpy (op->buf_asm, "LOADSP ");
+		asmprintf ("LOADSP");
 		sprintf (arg, "%d", val);
-		strcat (op->buf_asm, arg);
+		asmprintf (arg);
 		return 1;
 	}
-	strcpy (op->buf_asm, "IM ");
+	asmprintf ("IM");
 	sprintf (arg, "%d", instr & 0x7f);
-	strcat (op->buf_asm, arg);
+	asmprintf (arg);
 	return 1;
 }
 
-RAsmPlugin r_asm_plugin_zpu = {
+RzAsmPlugin rz_asm_plugin_zpu = {
 	.name = "zpu",
 	.arch = "zpu",
 	.license = "LGPL3",
@@ -93,8 +96,8 @@ RAsmPlugin r_asm_plugin_zpu = {
 };
 
 #ifndef CORELIB
-RLibStruct radare_plugin = {
-	.type = R_LIB_TYPE_ASM,
-	.data = &r_asm_plugin_zpu
+RzLibStruct rizin_plugin = {
+	.type = RZ_LIB_TYPE_ASM,
+	.data = &rz_asm_plugin_zpu
 };
 #endif

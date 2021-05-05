@@ -1,12 +1,11 @@
-radare2_zpu plugins
-====================
+# ZPU disasssembler plugin for Rizin
 
-Support for the ZPU microprocessor in radare2
+Support for the ZPU microprocessor in Rizin
 
-* The asm plugin is completed.
+# How to build
 
-Building
---------
-
-Just type `make`.
-
+```
+$ meson configure
+$ ninja -C build
+$ ninja -C build install
+```
