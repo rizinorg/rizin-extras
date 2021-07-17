@@ -21,7 +21,7 @@ typedef struct ta_iter {
 	const char *end;
 
 	char regname[50];
-	char groupName[50];
+	char baseaddress[50];
 	char bitoffset[10];
 	char bitwidth[20];
 	char description[50];
@@ -42,7 +42,7 @@ static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
 
 static const RzCmdDescArg cmd_svd_args[] = {
 	{
-		.name = "Path to svd file",
+		.name = "Path to the SVD file",
 		.type = RZ_CMD_ARG_TYPE_FILE,
 
 	},
@@ -70,7 +70,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 	cur = value;
 	value[0] = 0;
 
-	if (!ta->groupName[0]) {
+	if (!ta->baseaddress[0]) {
 		while (!ta_iter_done(ta) &&
 			(yxml_parse(&ta->x, *ta->ptr) != YXML_ELEMSTART ||
 				strcasecmp(ta->x.elem, "peripherals"))) {
@@ -82,11 +82,11 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		ta_x = ta->x;
 
 		level = 0;
-		while (!ta_iter_done(ta) && !ta->groupName[0]) {
+		while (!ta_iter_done(ta) && !ta->baseaddress[0]) {
 			switch ((r = yxml_parse(&ta->x, *ta->ptr))) {
 			case YXML_ELEMSTART:
 				level += 1;
-				if (level == 1 && strcasecmp(ta->x.elem, "groupName") == 0) {
+				if (level == 2 && strcasecmp(ta->x.elem, "baseAddress") == 0) {
 					cur = value;
 					*cur = 0;
 				}
@@ -96,9 +96,11 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				level -= 1;
 				if (level < 0) {
 					return ta_iter_next(ta);
-				} else if (level == 1 && cur) {
-					strcpytrunc(ta->groupName, value, sizeof(ta->groupName));
+				} else if (level == 2 && cur) {
+					strcpytrunc(ta->baseaddress, value, sizeof(ta->baseaddress));
 					cur = NULL;
+
+					// go back to the beginning of peripherals?
 					ta->ptr = ta_start;
 					ta->x = ta_x;
 				}
@@ -126,8 +128,9 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		if (ta_iter_done(ta))
 			return NULL;
 	}
-	assert(ta->groupName[0]);
+	assert(ta->baseaddress[0]);
 
+	// find <register>
 	level = 0;
 	while (!ta_iter_done(ta)) {
 		r = yxml_parse(&ta->x, *ta->ptr);
@@ -141,8 +144,8 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 		} else if (r == YXML_ELEMEND) {
 			level -= 1;
-			if (level < 0) {
-				ta->groupName[0] = 0;
+			if (level < 1) {
+				ta->baseaddress[0] = 0;
 				return ta_iter_next(ta);
 			}
 		}
@@ -164,16 +167,16 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		switch (r) {
 		case YXML_ELEMSTART:
 			level += 1;
-			if (level != 7)
+			if (level != 5)
 				break;
-			else if (strcasecmp(ta->x.elem, "name") == 0) {
+			if (strcasecmp(ta->x.elem, "displayName") == 0) {
 				elem_type = REGNAME;
-			} else if (strcasecmp(ta->x.elem, "bitWidth") == 0) {
-				elem_type = BITWIDTH;
-			} else if (strcasecmp(ta->x.elem, "bitOffset") == 0) {
-				elem_type = BITOFFSET;
 			} else if (strcasecmp(ta->x.elem, "description") == 0) {
 				elem_type = DESCRIPTION;
+			} else if (strcasecmp(ta->x.elem, "addressOffset") == 0) {
+				elem_type = BITOFFSET;
+			} else if (strcasecmp(ta->x.elem, "size") == 0) {
+				elem_type = BITWIDTH;
 			} else {
 				break;
 			}
@@ -183,10 +186,10 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 		case YXML_ELEMEND:
 			level -= 1;
-			if (level < 0) {
-				ta->groupName[0] = 0;
+			if (level < 2) {
+				ta->baseaddress[0] = 0;
 				return ta_iter_next(ta);
-			} else if (level != 6 || !cur) {
+			} else if (level != 4 || !cur) {
 				break;
 			}
 			cur = NULL;
@@ -201,6 +204,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				strcpytrunc(ta->regname, value, sizeof(ta->regname));
 				break;
 			case DESCRIPTION:
+				rz_str_replace_char(value, '\n', ' ');
 				strcpytrunc(ta->description, value, sizeof(ta->description));
 				break;
 			}
@@ -211,7 +215,6 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 				break;
 			}
 			tmp = ta->x.data;
-			rz_str_replace_char(tmp, '\n', ' ');
 			while (*tmp && cur < value + sizeof(value))
 				*cur++ = *tmp++;
 			if (cur >= value + sizeof(value))
@@ -232,7 +235,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		}
 		r = yxml_parse(&ta->x, *ta->ptr);
 	}
-	return ta->bitoffset && *ta->regname && *ta->groupName && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);
+	return ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);
 }
 
 static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
@@ -249,7 +252,7 @@ static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 	ta->ptr = ta->start = doc;
 	ta->end = ta->start + doc_len;
 	yxml_init(&ta->x, ta->yxml_buf, sizeof(ta->yxml_buf));
-	ta->groupName[0] = 0;
+	ta->baseaddress[0] = 0;
 	return ta_iter_next(ta);
 }
 
@@ -257,9 +260,8 @@ static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
 	char *name;
 	for (ta = ta_iter_init(&ta_spc, file); ta; ta = ta_iter_next(ta)) {
-		name = rz_str_newf("%s.%s", ta->groupName, ta->regname);
-		rz_flag_set(core->flags, name, rz_num_math(NULL,ta->bitoffset), rz_num_math(NULL,ta->bitwidth));
-		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, rz_num_math(NULL,ta->bitoffset), ta->description);
+		rz_flag_set(core->flags, name, rz_num_math(NULL, ta->bitoffset), rz_num_math(NULL, ta->bitwidth));
+		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, rz_num_math(NULL, ta->bitoffset), ta->description);
 	}
 	return 1;
 }
