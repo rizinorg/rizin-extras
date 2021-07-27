@@ -24,7 +24,7 @@ typedef struct ta_iter {
 	char baseaddress[50];
 	char bitoffset[10];
 	char bitwidth[20];
-	char description[50];
+	char description[200];
 } ta_iter;
 
 enum { REGNAME,
@@ -34,8 +34,9 @@ enum { REGNAME,
 
 static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
 	size_t to_copy = strlen(src);
-	if (to_copy >= dstsize)
+	if (to_copy >= dstsize) {
 		to_copy = dstsize - 1;
+	}
 	memcpy(dst, src, to_copy);
 	dst[to_copy] = '\0';
 }
@@ -44,7 +45,6 @@ static const RzCmdDescArg cmd_svd_args[] = {
 	{
 		.name = "Path to the SVD file",
 		.type = RZ_CMD_ARG_TYPE_FILE,
-
 	},
 	{ 0 },
 };
@@ -57,6 +57,9 @@ static const RzCmdDescHelp svd_usage = {
 static inline int ta_iter_done(ta_iter *ta) {
 	return *ta->ptr == 0 || ta->ptr >= ta->end;
 }
+
+static ta_iter *ta_iter_return(ta_iter *ta);
+static ta_iter *ta_iter_init_vars(ta_iter *ta);
 
 static ta_iter *ta_iter_next(ta_iter *ta) {
 	yxml_ret_t r = YXML_OK;
@@ -71,62 +74,65 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 	value[0] = 0;
 
 	if (!ta->baseaddress[0]) {
-		while (!ta_iter_done(ta) &&
-			(yxml_parse(&ta->x, *ta->ptr) != YXML_ELEMSTART ||
-				strcasecmp(ta->x.elem, "peripherals"))) {
-			ta->ptr++;
-		}
-		if (ta_iter_done(ta))
-			return NULL;
-		ta_start = ta->ptr;
-		ta_x = ta->x;
+		ta_iter_done(ta);
+	}
+	while (!ta_iter_done(ta) &&
+		(yxml_parse(&ta->x, *ta->ptr) != YXML_ELEMSTART ||
+			strcasecmp(ta->x.elem, "peripherals"))) {
+		ta->ptr++;
+	}
+	if (ta_iter_done(ta)) {
+		return NULL;
+	}
+	ta_start = ta->ptr;
+	ta_x = ta->x;
 
-		level = 0;
-		while (!ta_iter_done(ta) && !ta->baseaddress[0]) {
-			switch ((r = yxml_parse(&ta->x, *ta->ptr))) {
-			case YXML_ELEMSTART:
-				level += 1;
-				if (level == 2 && strcasecmp(ta->x.elem, "baseAddress") == 0) {
-					cur = value;
-					*cur = 0;
-				}
-				break;
+	level = 0;
+	while (!ta_iter_done(ta) && !ta->baseaddress[0]) {
+		switch ((r = yxml_parse(&ta->x, *ta->ptr))) {
+		case YXML_ELEMSTART:
+			level += 1;
+			if (level == 2 && strcasecmp(ta->x.elem, "baseAddress") == 0) {
+				cur = value;
+				*cur = 0;
+			}
+			break;
 
-			case YXML_ELEMEND:
-				level -= 1;
-				if (level < 0) {
-					return ta_iter_next(ta);
-				} else if (level == 2 && cur) {
-					strcpytrunc(ta->baseaddress, value, sizeof(ta->baseaddress));
-					cur = NULL;
+		case YXML_ELEMEND:
+			level -= 1;
+			if (level < 0) {
+				return ta_iter_next(ta);
+			} else if (level == 2 && cur) {
+				strcpytrunc(ta->baseaddress, value, sizeof(ta->baseaddress));
+				cur = NULL;
 
-					// go back to the beginning of peripherals?
-					ta->ptr = ta_start;
-					ta->x = ta_x;
-				}
-				break;
+				// go back to the beginning of peripherals?
+				ta->ptr = ta_start;
+				ta->x = ta_x;
+			}
+			break;
 
-			case YXML_CONTENT:
-				if (!cur || level != 2) {
-					break;
-				}
-				tmp = ta->x.data;
-				while (*tmp && cur < value + sizeof(value)) {
-					*cur++ = *tmp++;
-				}
-				if (cur >= value + sizeof(value)) {
-					cur = NULL;
-				} else {
-					*cur = 0;
-				}
-				break;
-			default:
+		case YXML_CONTENT:
+			if (!cur || level != 2) {
 				break;
 			}
-			ta->ptr++;
+			tmp = ta->x.data;
+			while (*tmp && cur < value + sizeof(value)) {
+				*cur++ = *tmp++;
+			}
+			if (cur >= value + sizeof(value)) {
+				cur = NULL;
+			} else {
+				*cur = 0;
+			}
+			break;
+		default:
+			break;
 		}
-		if (ta_iter_done(ta))
-			return NULL;
+		ta->ptr++;
+	}
+	if (ta_iter_done(ta)) {
+		return NULL;
 	}
 	assert(ta->baseaddress[0]);
 
@@ -161,7 +167,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 	value[0] = 0;
 	elem_type = -1;
 
-	*ta->bitoffset = *ta->regname = *ta->bitwidth = 0;
+	ta_iter_init_vars(ta);
 
 	for (;;) {
 		switch (r) {
@@ -235,8 +241,24 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		}
 		r = yxml_parse(&ta->x, *ta->ptr);
 	}
-	return ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);
+	return ta_iter_return(ta);
 }
+
+static ta_iter *ta_iter_return(ta_iter *ta) {
+	if (!ta) {
+		return NULL;
+	}
+	return ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);	
+}
+
+static ta_iter *ta_iter_init_vars(ta_iter *ta) {
+	if (!ta) {
+		return NULL;
+	}
+	*ta->bitoffset = *ta->regname = *ta->bitwidth = *ta->description = 0;
+	return ta;
+}
+
 
 static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 	char *doc = rz_file_slurp(file, NULL);
