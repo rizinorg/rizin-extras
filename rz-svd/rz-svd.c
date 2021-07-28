@@ -192,7 +192,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 		case YXML_ELEMEND:
 			level -= 1;
-			if (level < 2) {
+			if (level < 0) {
 				ta->baseaddress[0] = 0;
 				return ta_iter_next(ta);
 			} else if (level != 4 || !cur) {
@@ -259,7 +259,6 @@ static ta_iter *ta_iter_init_vars(ta_iter *ta) {
 	return ta;
 }
 
-
 static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 	char *doc = rz_file_slurp(file, NULL);
 	if (!doc) {
@@ -280,10 +279,11 @@ static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 
 static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
-	char *name;
+	int address;
 	for (ta = ta_iter_init(&ta_spc, file); ta; ta = ta_iter_next(ta)) {
-		rz_flag_set(core->flags, name, rz_num_math(NULL, ta->bitoffset), rz_num_math(NULL, ta->bitwidth));
-		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, rz_num_math(NULL, ta->bitoffset), ta->description);
+		address = rz_num_math(NULL, ta->bitoffset) + rz_num_math(NULL, ta->baseaddress);
+		rz_flag_set(core->flags, ta->regname, address, rz_num_math(NULL, ta->bitwidth));
+		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, address , ta->description);
 	}
 	return 1;
 }
