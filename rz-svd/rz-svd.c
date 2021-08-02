@@ -60,6 +60,8 @@ static inline int ta_iter_done(ta_iter *ta) {
 
 static ta_iter *ta_iter_return(ta_iter *ta);
 static ta_iter *ta_iter_init_vars(ta_iter *ta);
+static inline int ta_iter_find_register(ta_iter *ta);
+static inline int ta_iter_parse_register(ta_iter *ta);
 
 static ta_iter *ta_iter_next(ta_iter *ta) {
 	yxml_ret_t r = YXML_OK;
@@ -134,47 +136,42 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 	if (ta_iter_done(ta)) {
 		return NULL;
 	}
-	assert(ta->baseaddress[0]);
 
-	// find <register>
-	level = 0;
-	while (!ta_iter_done(ta)) {
-		r = yxml_parse(&ta->x, *ta->ptr);
-
-		if (r == YXML_ELEMSTART) {
-			level += 1;
-			if (level == 3 &&
-				strcasecmp(ta->x.elem, "register") == 0) {
-				break;
-			}
-
-		} else if (r == YXML_ELEMEND) {
-			level -= 1;
-			if (level < 1) {
-				ta->baseaddress[0] = 0;
-				return ta_iter_next(ta);
-			}
-		}
-		ta->ptr++;
+	if (ta_iter_find_register(ta)) {
+		return ta_iter_next(ta);
 	}
 	if (ta_iter_done(ta)) {
 		return NULL;
 	}
 
-	assert(r == YXML_ELEMSTART);
-
-	cur = NULL;
-	value[0] = 0;
-	elem_type = -1;
-
 	ta_iter_init_vars(ta);
 
+	int ret = ta_iter_parse_register(ta);
+	if (ret == 1) {
+		return ta_iter_next(ta);
+	}
+	if (ret == -1){
+		return NULL;
+	}
+
+	return ta_iter_return(ta);
+}
+
+static inline int ta_iter_parse_register(ta_iter *ta) {
+	int level = 3;
+
+	char *cur = NULL, *tmp;
+	char value[VALUESIZE];
+	value[0] = 0;
+	elem_type = -1;
+	yxml_ret_t r = YXML_OK;
 	for (;;) {
-		switch (r) {
+	switch (r) {
 		case YXML_ELEMSTART:
 			level += 1;
-			if (level != 5)
+			if (level != 4) {
 				break;
+			}
 			if (strcasecmp(ta->x.elem, "displayName") == 0) {
 				elem_type = REGNAME;
 			} else if (strcasecmp(ta->x.elem, "description") == 0) {
@@ -194,8 +191,8 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 			level -= 1;
 			if (level < 0) {
 				ta->baseaddress[0] = 0;
-				return ta_iter_next(ta);
-			} else if (level != 4 || !cur) {
+				return 1;
+			} else if (level != 3 || !cur) {
 				break;
 			}
 			cur = NULL;
@@ -237,18 +234,43 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		}
 		ta->ptr++;
 		if (ta_iter_done(ta)) {
-			return NULL;
+			return -1;
 		}
 		r = yxml_parse(&ta->x, *ta->ptr);
 	}
-	return ta_iter_return(ta);
+	return 0;
+}
+
+static inline int ta_iter_find_register(ta_iter *ta) {
+	yxml_ret_t r = YXML_OK;
+	int level = 0;
+	while (!ta_iter_done(ta)) {
+		r = yxml_parse(&ta->x, *ta->ptr);
+
+		if (r == YXML_ELEMSTART) {
+			level += 1;
+			if (level == 3 &&
+				strcasecmp(ta->x.elem, "register") == 0) {
+				break;
+			}
+
+		} else if (r == YXML_ELEMEND) {
+			level -= 1;
+			if (level < 1) {
+				ta->baseaddress[0] = 0;
+				return 1;
+			}
+		}
+		ta->ptr++;
+	}
+	return 0;
 }
 
 static ta_iter *ta_iter_return(ta_iter *ta) {
 	if (!ta) {
 		return NULL;
 	}
-	return ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);	
+	return *ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);	
 }
 
 static ta_iter *ta_iter_init_vars(ta_iter *ta) {
