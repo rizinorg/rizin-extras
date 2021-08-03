@@ -32,15 +32,6 @@ enum { REGNAME,
 	BITOFFSET,
 	DESCRIPTION } elem_type;
 
-static void strcpytrunc(char *dst, const char *src, size_t dstsize) {
-	size_t to_copy = strlen(src);
-	if (to_copy >= dstsize) {
-		to_copy = dstsize - 1;
-	}
-	memcpy(dst, src, to_copy);
-	dst[to_copy] = '\0';
-}
-
 static const RzCmdDescArg cmd_svd_args[] = {
 	{
 		.name = "Path to the SVD file",
@@ -105,7 +96,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 			if (level < 0) {
 				return ta_iter_next(ta);
 			} else if (level == 2 && cur) {
-				strcpytrunc(ta->baseaddress, value, sizeof(ta->baseaddress));
+				rz_str_ncpy(ta->baseaddress, value, sizeof(ta->baseaddress));
 				cur = NULL;
 
 				// go back to the beginning of peripherals?
@@ -198,17 +189,17 @@ static inline int ta_iter_parse_register(ta_iter *ta) {
 			cur = NULL;
 			switch (elem_type) {
 			case BITOFFSET:
-				strcpytrunc(ta->bitoffset, value, sizeof(ta->bitoffset));
+				rz_str_ncpy(ta->bitoffset, value, sizeof(ta->bitoffset));
 				break;
 			case BITWIDTH:
-				strcpytrunc(ta->bitwidth, value, sizeof(ta->bitwidth));
+				rz_str_ncpy(ta->bitwidth, value, sizeof(ta->bitwidth));
 				break;
 			case REGNAME:
-				strcpytrunc(ta->regname, value, sizeof(ta->regname));
+				rz_str_ncpy(ta->regname, value, sizeof(ta->regname));
 				break;
 			case DESCRIPTION:
 				rz_str_replace_char(value, '\n', ' ');
-				strcpytrunc(ta->description, value, sizeof(ta->description));
+				rz_str_ncpy(ta->description, value, sizeof(ta->description));
 				break;
 			}
 			break;
