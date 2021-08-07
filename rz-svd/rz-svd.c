@@ -53,18 +53,10 @@ static ta_iter *ta_iter_return(ta_iter *ta);
 static ta_iter *ta_iter_init_vars(ta_iter *ta);
 static inline int ta_iter_find_register(ta_iter *ta);
 static inline int ta_iter_parse_register(ta_iter *ta);
+static inline int ta_iter_find_baseaddress(ta_iter *ta);
 
 static ta_iter *ta_iter_next(ta_iter *ta) {
-	yxml_ret_t r = YXML_OK;
-	yxml_t ta_x;
-
-	int level;
-	char *cur, *tmp;
-	char value[VALUESIZE];
-	const char *ta_start;
-
-	cur = value;
-	value[0] = 0;
+	int ret;
 
 	if (!ta->baseaddress[0]) {
 		ta_iter_done(ta);
@@ -77,10 +69,43 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 	if (ta_iter_done(ta)) {
 		return NULL;
 	}
-	ta_start = ta->ptr;
-	ta_x = ta->x;
 
-	level = 0;
+	ret = ta_iter_find_baseaddress(ta);
+	if (ret == 1) {
+		return ta_iter_next(ta);
+	}
+	if (ta_iter_done(ta)) {
+		return NULL;
+	}
+
+	if (ta_iter_find_register(ta)) {
+		return ta_iter_next(ta);
+	}
+	if (ta_iter_done(ta)) {
+		return NULL;
+	}
+
+	ta_iter_init_vars(ta);
+
+	ret = ta_iter_parse_register(ta);
+	if (ret == 1) {
+		return ta_iter_next(ta);
+	}
+	else if (ret == -1){
+		return NULL;
+	}
+
+	return ta_iter_return(ta);
+}
+
+static inline int ta_iter_find_baseaddress(ta_iter *ta) {
+	int level = 0;
+	yxml_ret_t r = YXML_OK;
+	char *cur, *tmp;
+	char value[VALUESIZE];
+	cur = value;
+	value[0] = 0;	
+
 	while (!ta_iter_done(ta) && !ta->baseaddress[0]) {
 		switch ((r = yxml_parse(&ta->x, *ta->ptr))) {
 		case YXML_ELEMSTART:
@@ -94,14 +119,10 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		case YXML_ELEMEND:
 			level -= 1;
 			if (level < 0) {
-				return ta_iter_next(ta);
+				return 1;
 			} else if (level == 2 && cur) {
 				rz_str_ncpy(ta->baseaddress, value, sizeof(ta->baseaddress));
 				cur = NULL;
-
-				// go back to the beginning of peripherals?
-				ta->ptr = ta_start;
-				ta->x = ta_x;
 			}
 			break;
 
@@ -124,28 +145,7 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 		}
 		ta->ptr++;
 	}
-	if (ta_iter_done(ta)) {
-		return NULL;
-	}
-
-	if (ta_iter_find_register(ta)) {
-		return ta_iter_next(ta);
-	}
-	if (ta_iter_done(ta)) {
-		return NULL;
-	}
-
-	ta_iter_init_vars(ta);
-
-	int ret = ta_iter_parse_register(ta);
-	if (ret == 1) {
-		return ta_iter_next(ta);
-	}
-	if (ret == -1){
-		return NULL;
-	}
-
-	return ta_iter_return(ta);
+	return 0;
 }
 
 static inline int ta_iter_parse_register(ta_iter *ta) {
@@ -240,14 +240,14 @@ static inline int ta_iter_find_register(ta_iter *ta) {
 
 		if (r == YXML_ELEMSTART) {
 			level += 1;
-			if (level == 3 &&
+			if (level == 1 &&
 				strcasecmp(ta->x.elem, "register") == 0) {
 				break;
 			}
 
 		} else if (r == YXML_ELEMEND) {
 			level -= 1;
-			if (level < 1) {
+			if (level < -1) {
 				ta->baseaddress[0] = 0;
 				return 1;
 			}
