@@ -27,10 +27,11 @@ typedef struct ta_iter {
 	char description[200];
 } ta_iter;
 
-enum { REGNAME,
-	BITWIDTH,
-	BITOFFSET,
-	DESCRIPTION } elem_type;
+enum { REGISTER_NAME,
+	REGISTER_SIZE,
+	REGISTER_OFFSET,
+	REGISTER_DESCRIPTION,
+	PERIPHERAL_BASEADDRESS } elem_type;
 
 static const RzCmdDescArg cmd_svd_args[] = {
 	{
@@ -49,13 +50,13 @@ static inline int ta_iter_done(ta_iter *ta) {
 	return *ta->ptr == 0 || ta->ptr >= ta->end;
 }
 
-static ta_iter *ta_iter_return(ta_iter *ta);
+static ta_iter *ta_iter_return(ta_iter *ta, RzCore *core);
 static ta_iter *ta_iter_init_vars(ta_iter *ta);
 static inline int ta_iter_find_register(ta_iter *ta);
-static inline int ta_iter_parse_register(ta_iter *ta);
+static inline int ta_iter_parse_register(ta_iter *ta, RzCore *core);
 static inline int ta_iter_find_baseaddress(ta_iter *ta);
 
-static ta_iter *ta_iter_next(ta_iter *ta) {
+static ta_iter *ta_iter_next(ta_iter *ta, RzCore *core) {
 	int ret;
 
 	if (!ta->baseaddress[0]) {
@@ -72,14 +73,14 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 	ret = ta_iter_find_baseaddress(ta);
 	if (ret == 1) {
-		return ta_iter_next(ta);
+		return ta_iter_next(ta, core);
 	}
 	if (ta_iter_done(ta)) {
 		return NULL;
 	}
 
 	if (ta_iter_find_register(ta)) {
-		return ta_iter_next(ta);
+		return ta_iter_next(ta, core);
 	}
 	if (ta_iter_done(ta)) {
 		return NULL;
@@ -87,15 +88,15 @@ static ta_iter *ta_iter_next(ta_iter *ta) {
 
 	ta_iter_init_vars(ta);
 
-	ret = ta_iter_parse_register(ta);
+	ret = ta_iter_parse_register(ta, core);
 	if (ret == 1) {
-		return ta_iter_next(ta);
+		return ta_iter_next(ta, core);
 	}
 	else if (ret == -1){
 		return NULL;
 	}
 
-	return ta_iter_return(ta);
+	return ta_iter_return(ta, core);
 }
 
 static inline int ta_iter_find_baseaddress(ta_iter *ta) {
@@ -148,29 +149,35 @@ static inline int ta_iter_find_baseaddress(ta_iter *ta) {
 	return 0;
 }
 
-static inline int ta_iter_parse_register(ta_iter *ta) {
+static inline int ta_iter_parse_register(ta_iter *ta, RzCore *core) {
 	int level = 3;
-
+	int address;
 	char *cur = NULL, *tmp;
 	char value[VALUESIZE];
 	value[0] = 0;
 	elem_type = -1;
 	yxml_ret_t r = YXML_OK;
+
 	for (;;) {
 	switch (r) {
 		case YXML_ELEMSTART:
 			level += 1;
+			if (strcmp(ta->x.elem, "baseAddress") == 0 && level == 2) {
+				elem_type = PERIPHERAL_BASEADDRESS;
+				cur = value;
+				*cur = 0;				
+			}
 			if (level != 4) {
 				break;
 			}
 			if (strcasecmp(ta->x.elem, "displayName") == 0) {
-				elem_type = REGNAME;
+				elem_type = REGISTER_NAME;
 			} else if (strcasecmp(ta->x.elem, "description") == 0) {
-				elem_type = DESCRIPTION;
+				elem_type = REGISTER_DESCRIPTION;
 			} else if (strcasecmp(ta->x.elem, "addressOffset") == 0) {
-				elem_type = BITOFFSET;
+				elem_type = REGISTER_OFFSET;
 			} else if (strcasecmp(ta->x.elem, "size") == 0) {
-				elem_type = BITWIDTH;
+				elem_type = REGISTER_SIZE;
 			} else {
 				break;
 			}
@@ -180,6 +187,11 @@ static inline int ta_iter_parse_register(ta_iter *ta) {
 
 		case YXML_ELEMEND:
 			level -= 1;
+			if (elem_type == PERIPHERAL_BASEADDRESS) {
+				rz_str_ncpy(ta->baseaddress, value, sizeof(ta->baseaddress));
+				cur = NULL;
+				break;
+			}
 			if (level < 0) {
 				ta->baseaddress[0] = 0;
 				return 1;
@@ -188,18 +200,23 @@ static inline int ta_iter_parse_register(ta_iter *ta) {
 			}
 			cur = NULL;
 			switch (elem_type) {
-			case BITOFFSET:
+			case REGISTER_OFFSET:
 				rz_str_ncpy(ta->bitoffset, value, sizeof(ta->bitoffset));
 				break;
-			case BITWIDTH:
+			case REGISTER_SIZE:
 				rz_str_ncpy(ta->bitwidth, value, sizeof(ta->bitwidth));
+				address = rz_num_math(NULL, ta->bitoffset) + rz_num_math(NULL, ta->baseaddress);
+				rz_flag_set(core->flags, ta->regname, address, rz_num_math(NULL, ta->bitwidth));
+				rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, address , ta->description);				
 				break;
-			case REGNAME:
+			case REGISTER_NAME:
 				rz_str_ncpy(ta->regname, value, sizeof(ta->regname));
 				break;
-			case DESCRIPTION:
+			case REGISTER_DESCRIPTION:
 				rz_str_replace_char(value, '\n', ' ');
 				rz_str_ncpy(ta->description, value, sizeof(ta->description));
+				break;
+			default:
 				break;
 			}
 			break;
@@ -216,11 +233,10 @@ static inline int ta_iter_parse_register(ta_iter *ta) {
 			else
 				*cur = 0;
 			break;
-
 		default:
 			break;
 		}
-		if (level == 1) {
+		if (level == -1) {
 			break;
 		}
 		ta->ptr++;
@@ -257,11 +273,11 @@ static inline int ta_iter_find_register(ta_iter *ta) {
 	return 0;
 }
 
-static ta_iter *ta_iter_return(ta_iter *ta) {
+static ta_iter *ta_iter_return(ta_iter *ta, RzCore *core) {
 	if (!ta) {
 		return NULL;
 	}
-	return *ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta);	
+	return *ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta, core);	
 }
 
 static ta_iter *ta_iter_init_vars(ta_iter *ta) {
@@ -287,17 +303,14 @@ static ta_iter *ta_iter_init(ta_iter *ta, const char *file) {
 	ta->end = ta->start + doc_len;
 	yxml_init(&ta->x, ta->yxml_buf, sizeof(ta->yxml_buf));
 	ta->baseaddress[0] = 0;
-	return ta_iter_next(ta);
+	return ta;
 }
 
 static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
-	int address;
-	for (ta = ta_iter_init(&ta_spc, file); ta; ta = ta_iter_next(ta)) {
-		address = rz_num_math(NULL, ta->bitoffset) + rz_num_math(NULL, ta->baseaddress);
-		rz_flag_set(core->flags, ta->regname, address, rz_num_math(NULL, ta->bitwidth));
-		rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, address , ta->description);
-	}
+	ta = ta_iter_init(&ta_spc, file);
+	ta = ta_iter_next(ta, core);
+	for (; ta; ta = ta_iter_next(ta, core));
 	return 1;
 }
 
