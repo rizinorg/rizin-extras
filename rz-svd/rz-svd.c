@@ -1,12 +1,4 @@
-#include <rz_analysis.h>
-#include <rz_cmd.h>
-#include <rz_cons.h>
 #include <rz_core.h>
-#include <rz_lib.h>
-#include <rz_types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <yxml.h>
 
 #define XMLBUFSIZE 4096
