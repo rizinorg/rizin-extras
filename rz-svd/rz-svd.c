@@ -340,6 +340,7 @@ RzCorePlugin rz_core_plugin_svd = {
 	.name = "rz-svd",
 	.desc = "SVD Plugin for Rizin",
 	.license = "LGPL3",
+	.version = "0.1.0",
 	.author = "officialcjunior",
 	.init = rz_cmd_svd_init,
 };

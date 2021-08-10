@@ -1,4 +1,5 @@
 project('rz-svd', 'c',
+  version: '0.1.0',
   license: 'LGPL3',
   meson_version: '>=0.55.0',
   default_options: [
@@ -11,11 +12,6 @@ project('rz-svd', 'c',
 plugins_dir = join_paths(get_option('prefix'), 'share', 'rizin', 'plugins')
 
 py3_exe = import('python').find_installation()
-
-r = run_command(py3_exe, 'yxml')
-if r.returncode() == 1 and get_option('subprojects_check')
-  error('Subprojects are not updated. Please run `git clean -dxff subprojects/` to delete all local subprojects directories. If you want to compile against current subprojects then set option `subprojects_check=false`.')
-endif
 
 yxml_proj = subproject('yxml', default_options: ['default_library=static'])
 yxml_dep = yxml_proj.get_variable('yxml_dep')
