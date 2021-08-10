@@ -26,7 +26,7 @@ jobs:
     - name: Install rz-svd
       run: |
           cd rz-svd
-          meson --buildtype=release --prefix=/usr build
+          meson --buildtype=release --prefix=~/.local build
           ninja -C build
           sudo ninja -C build install
           rizin -qc "Lc" | grep rz-svd
