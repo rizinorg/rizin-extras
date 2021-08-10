@@ -91,8 +91,7 @@ static ta_iter *ta_iter_next(ta_iter *ta, RzCore *core) {
 	ret = ta_iter_parse_register(ta, core);
 	if (ret == 1) {
 		return ta_iter_next(ta, core);
-	}
-	else if (ret == -1){
+	} else if (ret == -1) {
 		return NULL;
 	}
 
@@ -105,7 +104,7 @@ static inline int ta_iter_find_baseaddress(ta_iter *ta) {
 	char *cur, *tmp;
 	char value[VALUESIZE];
 	cur = value;
-	value[0] = 0;	
+	value[0] = 0;
 
 	while (!ta_iter_done(ta) && !ta->baseaddress[0]) {
 		switch ((r = yxml_parse(&ta->x, *ta->ptr))) {
@@ -159,13 +158,13 @@ static inline int ta_iter_parse_register(ta_iter *ta, RzCore *core) {
 	yxml_ret_t r = YXML_OK;
 
 	for (;;) {
-	switch (r) {
+		switch (r) {
 		case YXML_ELEMSTART:
 			level += 1;
 			if (strcmp(ta->x.elem, "baseAddress") == 0 && level == 2) {
 				elem_type = PERIPHERAL_BASEADDRESS;
 				cur = value;
-				*cur = 0;				
+				*cur = 0;
 			}
 			if (level != 4) {
 				break;
@@ -207,7 +206,7 @@ static inline int ta_iter_parse_register(ta_iter *ta, RzCore *core) {
 				rz_str_ncpy(ta->bitwidth, value, sizeof(ta->bitwidth));
 				address = rz_num_math(NULL, ta->bitoffset) + rz_num_math(NULL, ta->baseaddress);
 				rz_flag_set(core->flags, ta->regname, address, rz_num_math(NULL, ta->bitwidth));
-				rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, address , ta->description);				
+				rz_meta_set_string(core->analysis, RZ_META_TYPE_COMMENT, address, ta->description);
 				break;
 			case REGISTER_NAME:
 				rz_str_ncpy(ta->regname, value, sizeof(ta->regname));
@@ -226,12 +225,14 @@ static inline int ta_iter_parse_register(ta_iter *ta, RzCore *core) {
 				break;
 			}
 			tmp = ta->x.data;
-			while (*tmp && cur < value + sizeof(value))
+			while (*tmp && cur < value + sizeof(value)) {
 				*cur++ = *tmp++;
-			if (cur >= value + sizeof(value))
+			}
+			if (cur >= value + sizeof(value)) {
 				cur = NULL;
-			else
+			} else {
 				*cur = 0;
+			}
 			break;
 		default:
 			break;
@@ -277,7 +278,7 @@ static ta_iter *ta_iter_return(ta_iter *ta, RzCore *core) {
 	if (!ta) {
 		return NULL;
 	}
-	return *ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta, core);	
+	return *ta->bitoffset && *ta->regname && *ta->baseaddress && *ta->bitwidth && *ta->description ? ta : ta_iter_next(ta, core);
 }
 
 static ta_iter *ta_iter_init_vars(ta_iter *ta) {
@@ -310,7 +311,9 @@ static int parse_svd(RzCore *core, const char *file) {
 	ta_iter ta_spc, *ta;
 	ta = ta_iter_init(&ta_spc, file);
 	ta = ta_iter_next(ta, core);
-	for (; ta; ta = ta_iter_next(ta, core));
+	while (ta) {
+		ta = ta_iter_next(ta, core);
+	}
 	return 1;
 }
 
