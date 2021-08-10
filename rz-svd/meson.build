@@ -9,11 +9,10 @@ project('rz-svd', 'c',
 
 # handle the yxml dependency
 plugins_dir = join_paths(get_option('prefix'), 'share', 'rizin', 'plugins')
-check_meson_subproject_py = files('sys/check_meson_subproject.py')
 
 py3_exe = import('python').find_installation()
 
-r = run_command(py3_exe, check_meson_subproject_py, 'yxml')
+r = run_command(py3_exe, 'yxml')
 if r.returncode() == 1 and get_option('subprojects_check')
   error('Subprojects are not updated. Please run `git clean -dxff subprojects/` to delete all local subprojects directories. If you want to compile against current subprojects then set option `subprojects_check=false`.')
 endif
