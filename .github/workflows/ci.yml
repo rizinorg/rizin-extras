@@ -1,56 +1,33 @@
-name: CI
+name: rizin-extras 
 
 on:
   push:
-  
+    branches: [ master ]
   pull_request:
-
+    branches: [ master ]
 
 jobs:
-
-  build-extras:
-    name: Build radare2 extras and r2pipe
+  build:
     runs-on: ubuntu-latest
-    env:
-      TESTS: 'arm64v35 armthumb atombios baleful bcl ba2 blackfin blessr2 keystone-lib keystone rlang-duktape mc6809 microblaze msil pcap ppcdisasm psosvm swf unicorn-lib unicorn vc4 x86udis x86bea x86tab x86olly x86zyan z80-nc'
-      R2PIPE_TESTS: 'r2pipe-go r2pipe-js r2pipe-py'
     steps:
+    - name: Install python
+      run: sudo apt-get --assume-yes install python3-wheel python3-setuptools python3-dev ninja-build
+    - name: Install meson and ninja
+      run: sudo pip3 install meson PyYAML ninja pytest virtualenv
     - uses: actions/checkout@v2
-      with:
-        repository: radareorg/radare2
-        ref: master
-        path: ./radare2
-    - name: Install dependencies
-      run: sudo apt-get --assume-yes install wget unzip python3-wheel python3-setuptools build-essential python3-pip && sudo pip3 install meson ninja
-    - name: Install radare2
+    - name: Install Rizin
       run: |
-        export PATH=$PATH:/usr/local/bin
-        meson --prefix=/usr --buildtype=release build && ninja -C build && sudo ninja -C build install
-      working-directory: radare2
-    - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
-        path: ./radare2-extras
-    - name: Init r2pm
-      run: r2pm init
-    - name: Compile and install plugins
+          git clone --depth=1 https://github.com/rizinorg/rizin
+          cd rizin
+          meson --buildtype=release --prefix=/usr build
+          ninja -C build
+          sudo ninja -C build install
+          cd ..
+    - name: Install rz-svd
       run: |
-        set -e
-        export R2PM_GITDIR=`pwd`
-        export R2PM_GITSKIP=1
-        for p in $TESTS ; do
-          echo $p
-          r2pm -i $p
-        done
-        set +e
-    - name: Compile and install r2pipe
-      run: |
-        set -e
-        export R2PM_GITDIR=`pwd`
-        export R2PM_GITSKIP=1
-        for p in $R2PIPE_TESTS ; do
-          echo $p
-          r2pm -i $p
-        done
-        set +e
-
+          cd rz-svd
+          meson --buildtype=release --prefix=~/.local build
+          ninja -C build
+          sudo ninja -C build install
+          rizin -qc "Lc" | grep rz-svd
+          cd ..
