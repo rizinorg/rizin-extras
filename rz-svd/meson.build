@@ -9,18 +9,18 @@ project('rz-svd', 'c',
 )
 
 # handle the yxml dependency
-plugins_dir = join_paths(get_option('prefix'), 'share', 'rizin', 'plugins')
+rz_core_dep = dependency('rz_core')
+plugins_dir = get_option('prefix') / rz_core_dep.get_variable(pkgconfig: 'plugindir', cmake: 'rz_core_PLUGINDIR')
+message('Plugins install directory: ' + plugins_dir)
 
 py3_exe = import('python').find_installation()
 
 yxml_proj = subproject('yxml', default_options: ['default_library=static'])
 yxml_dep = yxml_proj.get_variable('yxml_dep')
 
-rz_core_lib = dependency('rz_core')
-
 library('rz-svd',
   ['rz-svd.c'],
-  dependencies: [rz_core_lib, yxml_dep],
+  dependencies: [rz_core_dep, yxml_dep],
   install: true,
   install_dir: plugins_dir,
-) 
+)
