@@ -1,0 +1,1 @@
+option('plugins_dir', type: 'string', value: '', description: 'Absolute path where to install the plugin, otherwise <prefix>/<plugindir> is used')
