@@ -29,10 +29,21 @@ extern "C" {
 RzAsmPlugin rz_asm_plugin_ppc_ks = {
 	.name = "ppc.ks",
 	.arch = "ppc",
-	.desc = "powerpc keystone assembler",
+	.author = nullptr,
+	.version = nullptr,
+	.cpus = nullptr,
+	.desc = "PowerPC keystone assembler",
 	.license = "GPL",
 	.bits = 32|64,
+	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
+	.init = nullptr,
+	.fini = nullptr,
+	.disassemble = nullptr,
 	.assemble = &assemble,
+	.modify = nullptr,
+	.mnemonics = nullptr,
+	.features = nullptr,
+	.platforms = nullptr,
 };
 
 #ifndef CORELIB

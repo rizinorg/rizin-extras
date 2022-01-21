@@ -21,10 +21,21 @@ extern "C" {
 RzAsmPlugin rz_asm_plugin_sysz_ks = {
 	.name = "sysz.ks",
 	.arch = "sysz",
+	.author = nullptr,
+	.version = nullptr,
+	.cpus = nullptr,
 	.desc = "SystemZ keystone assembler (S390X)",
 	.license = "GPL",
 	.bits = 32,
+	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
+	.init = nullptr,
+	.fini = nullptr,
+	.disassemble = nullptr,
 	.assemble = &assemble,
+	.modify = nullptr,
+	.mnemonics = nullptr,
+	.features = nullptr,
+	.platforms = nullptr,
 };
 
 #ifndef CORELIB

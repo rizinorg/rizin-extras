@@ -29,10 +29,21 @@ extern "C" {
 RzAsmPlugin rz_asm_plugin_sparc_ks = {
 	.name = "sparc.ks",
 	.arch = "sparc",
-	.desc = "sparc keystone assembler",
+	.author = nullptr,
+	.version = nullptr,
+	.cpus = nullptr,
+	.desc = "SPARC keystone assembler",
 	.license = "GPL",
 	.bits = 32|64,
+	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
+	.init = nullptr,
+	.fini = nullptr,
+	.disassemble = nullptr,
 	.assemble = &assemble,
+	.modify = nullptr,
+	.mnemonics = nullptr,
+	.features = nullptr,
+	.platforms = nullptr,
 };
 
 #ifndef CORELIB

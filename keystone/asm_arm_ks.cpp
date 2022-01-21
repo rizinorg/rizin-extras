@@ -32,10 +32,21 @@ extern "C" {
 RzAsmPlugin rz_asm_plugin_arm_ks = {
 	.name = "arm.ks",
 	.arch = "arm",
+	.author = nullptr,
+	.version = nullptr,
+	.cpus = nullptr,
 	.desc = "ARM keystone assembler",
 	.license = "GPL",
 	.bits = 16|32|64,
-	.assemble = &assemble
+	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
+	.init = nullptr,
+	.fini = nullptr,
+	.disassemble = nullptr,
+	.assemble = &assemble,
+	.modify = nullptr,
+	.mnemonics = nullptr,
+	.features = nullptr,
+	.platforms = nullptr,
 };
 
 #ifndef CORELIB

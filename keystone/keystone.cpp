@@ -4,15 +4,15 @@
 #include <rz_lib.h>
 #include <keystone/keystone.h>
 
-static void *oldcur = NULL;
-static ks_engine *ks = NULL;
+static void *oldcur = nullptr;
+static ks_engine *ks = nullptr;
 static int oldbit = 0;
 
 RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arch, ks_mode mode) {
 	ks_err err = KS_ERR_ARCH;
 	bool must_init = false;
 	size_t count, size;
-	ut8 *insn = NULL;
+	ut8 *insn = nullptr;
 
 	if (!ks_arch_supported (arch)) {
 		return -1;
@@ -25,7 +25,7 @@ RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arc
 	if (must_init) {
 		if (ks) {
 			ks_close (ks);
-			ks = NULL;
+			ks = nullptr;
 		}
 		err = ks_open (arch, mode, &ks);
 		if (err || !ks) {
@@ -33,7 +33,7 @@ RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arc
 			ks_free (insn);
 			if (ks) {
 				ks_close (ks);
-				ks = NULL;
+				ks = nullptr;
 			}
 			return -1;
 		}
@@ -43,7 +43,7 @@ RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arc
 		ks_free (insn);
 		if (ks) {
 			ks_close (ks);
-			ks = NULL;
+			ks = nullptr;
 		}
 		return -1;
 	}
@@ -58,7 +58,7 @@ RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arc
 		ks_free (insn);
 		if (ks) {
 			ks_close (ks);
-			ks = NULL;
+			ks = nullptr;
 		}
 		return -1;
 	}
@@ -66,7 +66,7 @@ RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arc
 	ks_free (insn);
 	if (ks) {
 		ks_close (ks);
-		ks = NULL;
+		ks = nullptr;
 	}
 	return size;
 }

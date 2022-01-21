@@ -21,10 +21,21 @@ extern "C" {
 RzAsmPlugin rz_asm_plugin_hexagon_ks = {
 	.name = "hexagon.ks",
 	.arch = "hexagon",
+	.author = nullptr,
+	.version = nullptr,
+	.cpus = nullptr,
 	.desc = "Hexagon keystone assembler",
 	.license = "GPL",
 	.bits = 32,
+	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
+	.init = nullptr,
+	.fini = nullptr,
+	.disassemble = nullptr,
 	.assemble = &assemble,
+	.modify = nullptr,
+	.mnemonics = nullptr,
+	.features = nullptr,
+	.platforms = nullptr,
 };
 
 #ifndef CORELIB
