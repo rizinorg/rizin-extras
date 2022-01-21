@@ -53,7 +53,9 @@ RzAsmPlugin rz_asm_plugin_mips_ks = {
 struct rz_lib_struct_t rizin_plugin = {
 	.type = RZ_LIB_TYPE_ASM,
 	.data = &rz_asm_plugin_mips_ks,
-	.version = RZ_VERSION
+	.version = RZ_VERSION,
+	.free = nullptr,
+	.pkgname = nullptr,
 };
 #endif
 
