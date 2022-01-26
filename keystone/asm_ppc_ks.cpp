@@ -32,7 +32,7 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 	for (i = 0; i < strlen(buffer); ++i) {
 		if (mnem && IS_WHITESPACE(buffer[i])) {
 			mnem = false;
-		} else if (!mnem && (buffer[i] == 'R' || buffer[i] == 'r') && IS_WHITESPACE(buffer[i - 1])) {
+		} else if (!mnem && (buffer[i] == 'R' || buffer[i] == 'r') && buffer[i - 1] != 'L' && buffer[i - 1] != 'l') {
 			buffer[i] = ' ';
 		}
 	}
