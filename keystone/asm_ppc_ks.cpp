@@ -22,6 +22,7 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 		RZ_LOG_ERROR("invalid arch bits.\n");
 		return -1;
 	}
+	// keystone does not support LE on ppc.
 	mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 
 	// for some reasons keystone on ppc does not accept r0, r1, etc..
