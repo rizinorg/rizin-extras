@@ -6,38 +6,63 @@
 #include <keystone/ppc.h>
 #include "keystone_priv.h"
 
+static void swap_endianness(RzAsmOp *ao) {
+	ut8 copy[4];
+	ut8 *buf = rz_asm_op_get_buf(ao);
+	copy[0] = buf[3];
+	copy[1] = buf[2];
+	copy[2] = buf[1];
+	copy[3] = buf[0];
+	rz_asm_op_set_buf(ao, copy, 4);
+}
+
 static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
-	size_t i;
 	bool mnem = true;
-	char buffer[128];
+	char buffer[128] = { 0 };
+	size_t i, j, buffer_max = sizeof(buffer) - 1;
 	ks_mode mode = (ks_mode)0;
 	switch (a->bits) {
 	case 32:
-		mode = (ks_mode)KS_MODE_PPC32;
+		mode = (ks_mode)((int)KS_MODE_PPC32 | KS_MODE_BIG_ENDIAN);
 		break;
 	case 64:
 		mode = (ks_mode)KS_MODE_PPC64;
+		if (a->big_endian) {
+			mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
+		}
 		break;
 	default:
 		RZ_LOG_ERROR("invalid arch bits.\n");
 		return -1;
 	}
-	// keystone does not support LE on ppc.
-	mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 
 	// for some reasons keystone on ppc does not accept r0, r1, etc..
-	// but accepts directly the register number: r0 = 0, r27 = 27, etc..
-	// example: addis R7, r6, 0x0011 -> addis 7, 6, 0x0011
-	snprintf(buffer, sizeof(buffer), "%s", str);
-	for (i = 0; i < strlen(buffer); ++i) {
-		if (mnem && IS_WHITESPACE(buffer[i])) {
+	// but accepts directly the register number: r0 = 0x0, r27 = 0x1B, etc..
+	// example: addis R7, r6, 0x0011 -> addis 0x7, 0x6, 0x0011
+	// for whatever reason keystone for ppc uses hexadecimal registers..
+	for (i = 0, j = 0; i < strlen(str) && j < buffer_max;) {
+		if (mnem && IS_WHITESPACE(str[i])) {
 			mnem = false;
-		} else if (!mnem && (buffer[i] == 'R' || buffer[i] == 'r') && buffer[i - 1] != 'L' && buffer[i - 1] != 'l') {
-			buffer[i] = ' ';
+		} else if (!mnem && (str[i] == 'R' || str[i] == 'r')) {
+			if ((IS_WHITESPACE(str[i - 1]) || str[i - 1] == '(' || str[i - 1] == ',')) {
+				int reg;
+				sscanf(str + i, str[i] == 'R' ? "R%d" : "r%d", &reg);
+				j += snprintf(buffer + j, buffer_max - j, "0x%02x", reg);
+				i += reg > 9 ? 3 : 2; // R10-R31 : R0-R9
+				continue;
+			}
 		}
+		buffer[j] = str[i];
+		i++;
+		j++;
 	}
-
-	return keystone_assemble(a, ao, buffer, KS_ARCH_PPC, mode);
+	int size = keystone_assemble(a, ao, buffer, KS_ARCH_PPC, mode);
+	if (size > 0 && !a->big_endian && a->bits == 32) {
+		// keystone does not support LE on ppc when 32 bit is set.
+		// so we manually swap the 4 bytes.
+		swap_endianness(ao);
+	}
+	return size;
 }
 
 #ifdef __cplusplus

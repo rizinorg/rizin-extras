@@ -4,49 +4,25 @@
 #include <rz_lib.h>
 #include <keystone/keystone.h>
 
-static void *oldcur = nullptr;
-static ks_engine *ks = nullptr;
-static int oldbit = 0;
-
 RZ_IPI int keystone_assemble(RzAsm *a, RzAsmOp *ao, const char *str, ks_arch arch, ks_mode mode) {
 	ks_err err = KS_ERR_ARCH;
-	bool must_init = false;
 	size_t count, size;
 	ut8 *insn = nullptr;
+	ks_engine *ks = nullptr;
 
 	if (!ks_arch_supported(arch)) {
 		return -1;
 	}
 
-	must_init = true; //! oldcur || (a->cur != oldcur || oldbit != a->bits);
-	oldcur = a->cur;
-	oldbit = a->bits;
-
-	if (must_init) {
+	err = ks_open(arch, mode, &ks);
+	if (err != KS_ERR_OK || !ks) {
+		RZ_LOG_ERROR("Cannot initialize keystone %s\n", ks_strerror(err));
 		if (ks) {
 			ks_close(ks);
-			ks = nullptr;
-		}
-		err = ks_open(arch, mode, &ks);
-		if (err != KS_ERR_OK || !ks) {
-			RZ_LOG_ERROR("Cannot initialize keystone %s\n", ks_strerror(err));
-			ks_free(insn);
-			if (ks) {
-				ks_close(ks);
-				ks = nullptr;
-			}
-			return -1;
-		}
-	}
-
-	if (!ks) {
-		ks_free(insn);
-		if (ks) {
-			ks_close(ks);
-			ks = nullptr;
 		}
 		return -1;
 	}
+
 	if (a->syntax == RZ_ASM_SYNTAX_ATT) {
 		ks_option(ks, KS_OPT_SYNTAX, KS_OPT_SYNTAX_ATT);
 	} else {
