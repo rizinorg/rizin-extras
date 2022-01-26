@@ -11,7 +11,7 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 	if (a->big_endian) {
 		mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 	}
-	return keystone_assemble (a, ao, str, KS_ARCH_HEXAGON, mode);
+	return keystone_assemble(a, ao, str, KS_ARCH_HEXAGON, mode);
 }
 
 #ifdef __cplusplus

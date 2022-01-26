@@ -18,11 +18,14 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 	case 64:
 		mode = KS_MODE_MIPS64;
 		break;
+	default:
+		RZ_LOG_ERROR("invalid arch bits.\n");
+		return -1;
 	}
 	if (a->big_endian) {
 		mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 	}
-	return keystone_assemble (a, ao, str, KS_ARCH_MIPS, mode);
+	return keystone_assemble(a, ao, str, KS_ARCH_MIPS, mode);
 }
 
 #ifdef __cplusplus
@@ -37,7 +40,7 @@ RzAsmPlugin rz_asm_plugin_mips_ks = {
 	.cpus = nullptr,
 	.desc = "MIPS keystone assembler",
 	.license = "GPL",
-	.bits = 16|32|64,
+	.bits = 16 | 32 | 64,
 	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
 	.init = nullptr,
 	.fini = nullptr,

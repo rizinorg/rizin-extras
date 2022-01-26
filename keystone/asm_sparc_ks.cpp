@@ -15,11 +15,14 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 	case 64:
 		mode = KS_MODE_SPARC64;
 		break;
+	default:
+		RZ_LOG_ERROR("invalid arch bits.\n");
+		return -1;
 	}
 	if (a->big_endian) {
 		mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 	}
-	return keystone_assemble (a, ao, str, KS_ARCH_SPARC, mode);
+	return keystone_assemble(a, ao, str, KS_ARCH_SPARC, mode);
 }
 
 #ifdef __cplusplus
@@ -34,7 +37,7 @@ RzAsmPlugin rz_asm_plugin_sparc_ks = {
 	.cpus = nullptr,
 	.desc = "SPARC keystone assembler",
 	.license = "GPL",
-	.bits = 32|64,
+	.bits = 32 | 64,
 	.endian = RZ_SYS_ENDIAN_LITTLE | RZ_SYS_ENDIAN_BIG,
 	.init = nullptr,
 	.fini = nullptr,
