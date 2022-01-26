@@ -19,7 +19,8 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 		RZ_LOG_ERROR("invalid arch bits.\n");
 		return -1;
 	}
-	if (a->big_endian) {
+	if (a->big_endian || a->bits == 64) {
+		// sparc64 is only BE
 		mode = (ks_mode)((int)mode | KS_MODE_BIG_ENDIAN);
 	}
 	return keystone_assemble(a, ao, str, KS_ARCH_SPARC, mode);
