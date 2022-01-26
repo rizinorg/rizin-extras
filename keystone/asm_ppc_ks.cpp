@@ -38,7 +38,7 @@ static int assemble(RzAsm *a, RzAsmOp *ao, const char *str) {
 
 	// for some reasons keystone on ppc does not accept r0, r1, etc..
 	// but accepts directly the register number: r0 = 0x0, r27 = 0x1B, etc..
-	// example: addis R7, r6, 0x0011 -> addis 0x7, 0x6, 0x0011
+	// example: addis R7, r31, 0x0011 -> addis 0x7, 0x1F, 0x0011
 	// for whatever reason keystone for ppc uses hexadecimal registers..
 	for (i = 0, j = 0; i < strlen(str) && j < buffer_max;) {
 		if (mnem && IS_WHITESPACE(str[i])) {
