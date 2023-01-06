@@ -5,9 +5,9 @@
 /"errop/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_TRAP |/};
 /"abs/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_ABS |/};
 /"copy/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_MOV |/};
-/"xcopy/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_MOV |/};
 /"not[wd]/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_NOT |/};
 /"add/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_ADD |/};
+/"sbf/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_SUB |/};
 /"and/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_AND |/};
 /"mul/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_MUL |/};
 /"nop/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_NOP |/};
@@ -30,9 +30,7 @@
 /"ret/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_RET |/};
 /"rfe/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_RET |/};
 /"s[bhwdqov]/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_STORE |/};
-/"xso/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_STORE |/};
 /"l[bhwdqov][^o]/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_LOAD |/};
-/"xlo/		{s/.type =/& RZ_ANALYSIS_OP_TYPE_LOAD |/};
 /"l[bhw][sz]/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_LOAD |/};
 /"loopdo/	{s/.type =/& RZ_ANALYSIS_OP_TYPE_REP |/};
 
