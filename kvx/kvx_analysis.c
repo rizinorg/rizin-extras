@@ -270,10 +270,10 @@ static int kvx_op(RzAnalysis *a, RzAnalysisOp *op, ut64 addr, const ut8 *buf, in
 
 		op->type = insn->opc->type;
 		op->cond = insn->opc->cond;
-		/* The delay slot is a bit abused here, it is used make each
-		 * instructions in a bundle complet at the same address, for
-		 * exemple branch isntruction comes first but will be effective
-		 * at the end of the bundle, after the remaning instructions. */
+		/* The delay slot a bit misused here, as it is used to make every
+		 * instructions in a bundle completes at the same time/address, for
+		 * example branch instruction comes first but will be effective
+		 * at the end of the bundle: after the remaining instructions. */
 		op->delay = insn->rem;
 
 		switch (op->type & RZ_ANALYSIS_OP_TYPE_MASK) {
