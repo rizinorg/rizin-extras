@@ -29,7 +29,6 @@ RzAsmPlugin rz_asm_plugin_sysz_ks = {
 	.fini = nullptr,
 	.disassemble = nullptr,
 	.assemble = &assemble,
-	.modify = nullptr,
 	.mnemonics = nullptr,
 	.features = nullptr,
 	.platforms = nullptr,

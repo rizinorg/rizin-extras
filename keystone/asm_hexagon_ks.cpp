@@ -32,7 +32,6 @@ RzAsmPlugin rz_asm_plugin_hexagon_ks = {
 	.fini = nullptr,
 	.disassemble = nullptr,
 	.assemble = &assemble,
-	.modify = nullptr,
 	.mnemonics = nullptr,
 	.features = nullptr,
 	.platforms = nullptr,
