@@ -7,14 +7,21 @@ assembler plugins for rizin.
 How to install
 --------------
 
-The plugins will be installed at ~/.config/rizin/plugins
+The following will install the plugin in your home directory.
+```
+$ meson setup --prefix=~/.local build
+$ meson compile -C build
+$ meson install -C build
+```
 
-	$ make
-	$ make install
+If you want to make the plugin available to everyone on the system, you can
+install it globally in your system-wide prefix. For example:
+```
+$ meson setup --prefix=/usr build
+$ meson compile -C build
+$ sudo meson install -C build
+```
 
-To uninstall them just:
-
-	$ make uninstall
 
 How to use it?
 --------------

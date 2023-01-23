@@ -1,1 +1,2 @@
 option('plugins_dir', type: 'string', value: '', description: 'Absolute path where to install the plugin, otherwise <prefix>/<plugindir> is used')
+option('use_sys_keystone', type: 'boolean', value: true, description: 'Whether to link against the system keystone or embed it')
