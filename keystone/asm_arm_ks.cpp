@@ -59,7 +59,6 @@ RzLibStruct rizin_plugin = {
 	.data = &rz_asm_plugin_arm_ks,
 	.version = RZ_VERSION,
 	.free = nullptr,
-	.pkgname = nullptr,
 };
 #endif
 
