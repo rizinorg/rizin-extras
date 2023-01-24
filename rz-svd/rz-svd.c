@@ -346,8 +346,9 @@ RzCorePlugin rz_core_plugin_svd = {
 };
 
 #ifndef CORELIB
-RZ_API RzLibStruct rizin_plugin = { .type = RZ_LIB_TYPE_CORE,
+RZ_API RzLibStruct rizin_plugin = {
+	.type = RZ_LIB_TYPE_CORE,
 	.data = &rz_core_plugin_svd,
 	.version = RZ_VERSION,
-	.pkgname = "rz-svd" };
+};
 #endif

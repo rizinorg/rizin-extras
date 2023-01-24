@@ -40,7 +40,6 @@ struct rz_lib_struct_t rizin_plugin = {
 	.data = &rz_asm_plugin_sysz_ks,
 	.version = RZ_VERSION,
 	.free = nullptr,
-	.pkgname = nullptr,
 };
 #endif
 
