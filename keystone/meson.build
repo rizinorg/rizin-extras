@@ -13,7 +13,10 @@ if get_option('use_sys_keystone')
   keystone_lib = dependency('keystone', allow_fallback: false)
 else
   cmake = import('cmake')
-  keystone_subproj = cmake.subproject('keystone')
+  opt_var = cmake.subproject_options()
+  opt_var.add_cmake_defines({'BUILD_LIBS_ONLY': true})
+  opt_var.set_install(false)
+  keystone_subproj = cmake.subproject('keystone', options: opt_var)
   keystone_lib = keystone_subproj.dependency('keystone')
 endif
 
