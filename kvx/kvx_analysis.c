@@ -305,13 +305,13 @@ unaligned:
 	return op->size;
 }
 
-static int kvx_archinfo(RzAnalysis *a, int query) {
+static int kvx_archinfo(RzAnalysis *a, RzAnalysisInfoType query) {
 	switch (query) {
 	case RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE:
 		return 4;
 	case RZ_ANALYSIS_ARCHINFO_MAX_OP_SIZE:
 		return 12;
-	case RZ_ANALYSIS_ARCHINFO_ALIGN:
+	case RZ_ANALYSIS_ARCHINFO_TEXT_ALIGN:
 		return 4;
 	case RZ_ANALYSIS_ARCHINFO_DATA_ALIGN:
 		return 0;
